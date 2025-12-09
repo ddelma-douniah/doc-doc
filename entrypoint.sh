@@ -16,6 +16,10 @@ mkdir -p /app/logs
 echo "Running database migrations..."
 python manage.py migrate --noinput
 
+# Initialize SocialApps for OAuth providers
+echo "Initializing SocialApp objects..."
+python manage.py init_socialapps
+
 # Collect static files
 echo "Collecting static files..."
 python manage.py collectstatic --noinput --clear
