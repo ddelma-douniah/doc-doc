@@ -22,10 +22,14 @@ services:
       - AWS_STORAGE_BUCKET_NAME=doc-doc
       - AWS_S3_ENDPOINT_URL=http://minio:9000
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
+      createbuckets:
+        condition: service_completed_successfully
     networks:
       - proxy
       - default
+    restart: unless-stopped
 
   minio:
     image: minio/minio:latest
@@ -38,15 +42,21 @@ services:
       - MINIO_ROOT_PASSWORD=minioadmin
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   # MinIO bucket creation
   createbuckets:
     image: minio/mc:latest
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      sleep 5;
       /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
       /usr/bin/mc mb myminio/doc-doc --ignore-existing;
       /usr/bin/mc anonymous set public myminio/doc-doc;
