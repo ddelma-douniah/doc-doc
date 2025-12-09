@@ -11,8 +11,8 @@ services:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
       - DEBUG=True
       - SECRET_KEY=django-insecure-4ljx5pbt9c98%4nww*0c=irj1g#2wz$$%e+pc(g-&=_)t9slwn!
@@ -23,6 +23,9 @@ services:
       - AWS_S3_ENDPOINT_URL=http://minio:9000
     depends_on:
       - minio
+    networks:
+      - proxy
+      - default
 
   minio:
     image: minio/minio:latest
@@ -54,3 +57,7 @@ volumes:
   minio_data:
   static_volume:
   media_volume:
+
+networks:
+  proxy:
+    external: true
