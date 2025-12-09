@@ -23,5 +23,5 @@ python manage.py collectstatic --noinput --clear
 # Create superuser if it doesn't exist (optional, for first deployment)
 # python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin')"
 
-echo "Starting Gunicorn..."
+echo "Starting Uvicorn ASGI server..."
 exec "$@"
