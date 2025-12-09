@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">{{ folder.name }}</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Subfolders</h2>
+            <ul>
+                {% for subfolder in folders %}
+                <li>
+                    <a href="{% url 'folder_detail' subfolder.id %}" class="text-blue-500 hover:underline">{{ subfolder.name }}</a>
+                    <a href="{% url 'share_folder' subfolder.id %}" class="ml-2 text-sm text-gray-500">(Share)</a>
+                </li>
+                {% empty %}
+                <li>No subfolders yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <h2 class="text-xl font-semibold mb-2">Files</h2>
+            <ul>
+                {% for file in files %}
+                <li>
+                    <a href="#" class="text-blue-500 hover:underline">{{ file.name }}</a>
+                    <a href="{% url 'share_file' file.id %}" class="ml-2 text-sm text-gray-500">(Share)</a>
+                </li>
+                {% empty %}
+                <li>No files yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-2">Create New Folder</h2>
+        <form method="post" action="">
+            {% csrf_token %}
+            <input type="text" name="folder_name" placeholder="Folder Name" class="border p-2 rounded">
+            <button type="submit" name="create_folder" class="bg-blue-500 text-white p-2 rounded">Create Folder</button>
+        </form>
+    </div>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-2">Upload New File</h2>
+        <form method="post" action="" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" class="border p-2 rounded">
+            <button type="submit" name="upload_file" class="bg-blue-500 text-white p-2 rounded">Upload File</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

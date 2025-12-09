@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>doc-doc</title>
+</head>
+<body>
+    <h1>Welcome to doc-doc</h1>
+    {% if user.is_authenticated %}
+        <p>Hi {{ user.username }}!</p>
+        <a href="{% url 'account_logout' %}">Log Out</a>
+    {% else %}
+        <a href="{% url 'account_login' %}">Log In</a>
+        <a href="{% url 'account_signup' %}">Sign Up</a>
+    {% endif %}
+</body>
+</html>

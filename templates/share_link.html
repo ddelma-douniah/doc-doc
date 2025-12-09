@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Share Link</h1>
+    <p>Here is your shareable link:</p>
+    <input type="text" value="{{ share_url }}" readonly class="w-full p-2 border rounded mt-2">
+</div>
+{% endblock %}
