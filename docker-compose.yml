@@ -5,12 +5,14 @@ services:
     image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
     environment:
-      - POSTGRES_DB=doc_doc
-      - POSTGRES_USER=doc_doc_user
-      - POSTGRES_PASSWORD=doc_doc_password
+      - POSTGRES_DB=${POSTGRES_DB:-doc_doc}
+      - POSTGRES_USER=${POSTGRES_USER:-doc_doc_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-doc_doc_password}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U doc_doc_user -d doc_doc"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-doc_doc_user} -d ${POSTGRES_DB:-doc_doc}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,30 +20,15 @@ services:
 
   web:
     build: .
-    command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8080 --workers 3 --timeout 120 doc_doc.wsgi:application"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
       - logs_volume:/app/logs
     expose:
-      - "8080"
-    environment:
-      - DEBUG=True
-      - SECRET_KEY=django-insecure-4ljx5pbt9c98%4nww*0c=irj1g#2wz$$%e+pc(g-&=_)t9slwn!
-      - ALLOWED_HOSTS=doc-doc.douniah.com,localhost,127.0.0.1
-      - POSTGRES_DB=doc_doc
-      - POSTGRES_USER=doc_doc_user
-      - POSTGRES_PASSWORD=doc_doc_password
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
-      - AWS_STORAGE_BUCKET_NAME=doc-doc
-      - AWS_S3_ENDPOINT_URL=http://minio:9000
+      - "${WEB_PORT:-8080}"
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -56,13 +43,15 @@ services:
 
   minio:
     image: minio/minio:latest
-    command: server /data --console-address ":9001"
+    command: server /data --address ":${MINIO_API_PORT:-9090}" --console-address ":${MINIO_CONSOLE_PORT:-9091}"
     ports:
-      - "9090:9090"
-      - "9091:9091"
+      - "${MINIO_API_PORT:-9090}:${MINIO_API_PORT:-9090}"
+      - "${MINIO_CONSOLE_PORT:-9091}:${MINIO_CONSOLE_PORT:-9091}"
+    env_file:
+      - .env
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${AWS_ACCESS_KEY_ID:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${AWS_SECRET_ACCESS_KEY:-minioadmin}
     volumes:
       - minio_data:/data
     healthcheck:
@@ -78,11 +67,13 @@ services:
     depends_on:
       minio:
         condition: service_healthy
+    env_file:
+      - .env
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/doc-doc --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/doc-doc;
+      /usr/bin/mc config host add myminio http://minio:${MINIO_API_PORT:-9090} ${AWS_ACCESS_KEY_ID:-minioadmin} ${AWS_SECRET_ACCESS_KEY:-minioadmin};
+      /usr/bin/mc mb myminio/${AWS_STORAGE_BUCKET_NAME:-doc-doc} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${AWS_STORAGE_BUCKET_NAME:-doc-doc};
       exit 0;
       "
 

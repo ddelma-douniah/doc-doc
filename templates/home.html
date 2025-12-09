@@ -1,16 +1,172 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en" class="h-full">
 <head>
-    <title>doc-doc</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>doc-doc - Secure Document Management</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body>
-    <h1>Welcome to doc-doc</h1>
-    {% if user.is_authenticated %}
-        <p>Hi {{ user.username }}!</p>
-        <a href="{% url 'account_logout' %}">Log Out</a>
-    {% else %}
-        <a href="{% url 'account_login' %}">Log In</a>
-        <a href="{% url 'account_signup' %}">Sign Up</a>
-    {% endif %}
+<body class="h-full">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold">DD</span>
+                    </div>
+                    <span class="ml-3 text-xl font-semibold text-gray-900">doc-doc</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-gray-900 font-medium">Dashboard</a>
+                        <a href="{% url 'account_logout' %}" class="text-gray-700 hover:text-gray-900">Sign Out</a>
+                    {% else %}
+                        <a href="{% url 'account_login' %}" class="text-gray-700 hover:text-gray-900 font-medium">Sign In</a>
+                        <a href="{% url 'account_signup' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                            Get Started
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center">
+                <h1 class="text-5xl font-bold text-gray-900 mb-6">
+                    Your Documents,<br>
+                    <span class="text-blue-600">Securely Managed</span>
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Store, organize, and share your files with ease. A modern, secure alternative to traditional cloud storage.
+                </p>
+                <div class="flex justify-center space-x-4">
+                    <a href="{% url 'account_signup' %}" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-lg">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Start Free
+                    </a>
+                    <a href="#features" class="inline-flex items-center px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors text-lg">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Everything you need</h2>
+                <p class="text-lg text-gray-600">Powerful features for modern file management</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Easy Upload</h3>
+                    <p class="text-gray-600">
+                        Drag and drop your files or upload them with a single click. Fast and intuitive.
+                    </p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-folder-tree text-3xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Smart Organization</h3>
+                    <p class="text-gray-600">
+                        Create folders and subfolders to keep your documents perfectly organized.
+                    </p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-share-nodes text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Secure Sharing</h3>
+                    <p class="text-gray-600">
+                        Share files and folders with secure links. Control who can access your content.
+                    </p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-halved text-3xl text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Enterprise Security</h3>
+                    <p class="text-gray-600">
+                        Your files are encrypted and stored securely with enterprise-grade infrastructure.
+                    </p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-3xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Lightning Fast</h3>
+                    <p class="text-gray-600">
+                        Built for speed with modern technology. Access your files instantly.
+                    </p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="text-center p-6">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-3xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Team Collaboration</h3>
+                    <p class="text-gray-600">
+                        Work together seamlessly with shared folders and real-time updates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-blue-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-white mb-4">Ready to get started?</h2>
+                <p class="text-xl text-blue-100 mb-8">
+                    Join thousands of users who trust doc-doc for their file storage
+                </p>
+                <a href="{% url 'account_signup' %}" class="inline-flex items-center px-8 py-4 bg-white hover:bg-gray-100 text-blue-600 font-semibold rounded-lg transition-colors text-lg">
+                    Create Free Account
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white font-bold">DD</span>
+                </div>
+                <p class="mb-4">&copy; 2025 doc-doc. All rights reserved.</p>
+                <div class="flex justify-center space-x-6">
+                    <a href="#" class="hover:text-white">Privacy Policy</a>
+                    <a href="#" class="hover:text-white">Terms of Service</a>
+                    <a href="#" class="hover:text-white">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

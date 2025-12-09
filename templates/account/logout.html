@@ -1,10 +1,55 @@
-{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Out - doc-doc</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="h-full flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+                <span class="text-white font-bold text-2xl">DD</span>
+            </div>
+        </div>
 
-{% block content %}
-<h2>Log Out</h2>
-<p>Are you sure you want to log out?</p>
-<form method="post" action="{% url 'account_logout' %}">
-  {% csrf_token %}
-  <button type="submit">Log Out</button>
-</form>
-{% endblock %}
+        <!-- Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <div class="text-center mb-6">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+                    <i class="fas fa-sign-out-alt text-yellow-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Sign Out</h2>
+                <p class="text-gray-600">
+                    Are you sure you want to sign out of your account?
+                </p>
+            </div>
+
+            <form method="post" action="{% url 'account_logout' %}" class="space-y-4">
+                {% csrf_token %}
+
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors">
+                    Yes, Sign Out
+                </button>
+
+                <a href="{% url 'dashboard' %}"
+                   class="block w-full text-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                    Cancel
+                </a>
+            </form>
+        </div>
+
+        <!-- Back to Home -->
+        <p class="mt-6 text-center">
+            <a href="{% url 'home' %}" class="text-sm text-gray-600 hover:text-gray-900">
+                Back to home
+            </a>
+        </p>
+    </div>
+</body>
+</html>

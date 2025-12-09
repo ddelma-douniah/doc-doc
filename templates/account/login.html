@@ -1,10 +1,128 @@
-{% extends "base.html" %}
+{% load static %}
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - doc-doc</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="h-full flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4">
+                <span class="text-white font-bold text-2xl">DD</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">Welcome back</h2>
+            <p class="text-gray-600 mt-2">Sign in to your account to continue</p>
+        </div>
 
-{% block content %}
-<h2>Log In</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Log In</button>
-</form>
-{% endblock %}
+        <!-- Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+            <!-- Social Login -->
+            <div class="space-y-3 mb-6">
+                <a href="{% provider_login_url 'google' %}"
+                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </a>
+                <a href="{% provider_login_url 'github' %}"
+                   class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <i class="fab fa-github w-5 h-5 mr-2 text-xl"></i>
+                    Continue with GitHub
+                </a>
+            </div>
+
+            <!-- Divider -->
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-4 bg-white text-gray-500">Or continue with email</span>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div>
+                    <label for="id_login" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email or Username
+                    </label>
+                    <input type="text"
+                           name="login"
+                           id="id_login"
+                           placeholder="Enter your email or username"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.login.errors %}border-red-500{% endif %}"
+                           value="{{ form.login.value|default:'' }}"
+                           required>
+                    {% if form.login.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.login.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Password
+                    </label>
+                    <input type="password"
+                           name="password"
+                           id="id_password"
+                           placeholder="Enter your password"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent {% if form.password.errors %}border-red-500{% endif %}"
+                           required>
+                    {% if form.password.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox"
+                               name="remember"
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-600">Remember me</span>
+                    </label>
+                    <a href="{% url 'account_reset_password' %}" class="text-sm text-blue-600 hover:text-blue-700">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Sign Up Link -->
+            <p class="mt-6 text-center text-sm text-gray-600">
+                Don't have an account?
+                <a href="{% url 'account_signup' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+                    Sign up for free
+                </a>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <p class="mt-8 text-center text-xs text-gray-500">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+        </p>
+    </div>
+</body>
+</html>
