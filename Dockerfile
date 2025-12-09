@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -37,5 +37,5 @@ EXPOSE 8080
 # Set entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-# Default command
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--timeout", "120", "doc_doc.wsgi:application"]
+# Default command - Using Uvicorn with ASGI
+CMD ["uvicorn", "doc_doc.asgi:application", "--host", "0.0.0.0", "--port", "8080", "--workers", "3", "--timeout-keep-alive", "120"]

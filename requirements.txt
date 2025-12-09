@@ -4,7 +4,12 @@ django-htmx>=1.19.0
 django-allauth>=65.3.0
 django-storages>=1.14.4
 boto3>=1.35.0
-gunicorn>=23.0.0
+
+# ASGI Server
+uvicorn[standard]>=0.32.0
+uvloop>=0.21.0
+httptools>=0.6.4
+
 psycopg2-binary>=2.9.10
 django-extensions>=3.2.3
 python-decouple>=3.8
