@@ -18,15 +18,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from doc_doc.core import views
-import uuid
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('allauth.urls')),
-    path('', views.dashboard, name='dashboard'),
-    path('home/', views.home, name='home'),
-    path('folder/<int:folder_id>/', views.folder_detail, name='folder_detail'),
-    path('share/file/<int:file_id>/', views.share_file, name='share_file'),
-    path('share/folder/<int:folder_id>/', views.share_folder, name='share_folder'),
-    path('share/<uuid:share_id>/', views.shared_file_view, name='shared_file_view'),
+    path('', views.DashboardView.as_view(), name='dashboard'),
+    path('home/', views.HomeView.as_view(), name='home'),
+    path('folder/<int:folder_id>/', views.FolderDetailView.as_view(), name='folder_detail'),
+    path('share/file/<int:file_id>/', views.ShareFileView.as_view(), name='share_file'),
+    path('share/folder/<int:folder_id>/', views.ShareFolderView.as_view(), name='share_folder'),
+    path('share/<uuid:share_id>/', views.SharedView.as_view(), name='shared_view'),
 ]

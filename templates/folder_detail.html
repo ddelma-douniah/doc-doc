@@ -1,54 +1,263 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">{{ folder.name }}</h1>
+{% block title %}{{ folder.name }} - doc-doc{% endblock %}
+{% block page_title %}{{ folder.name }}{% endblock %}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <h2 class="text-xl font-semibold mb-2">Subfolders</h2>
-            <ul>
-                {% for subfolder in folders %}
-                <li>
-                    <a href="{% url 'folder_detail' subfolder.id %}" class="text-blue-500 hover:underline">{{ subfolder.name }}</a>
-                    <a href="{% url 'share_folder' subfolder.id %}" class="ml-2 text-sm text-gray-500">(Share)</a>
-                </li>
-                {% empty %}
-                <li>No subfolders yet.</li>
-                {% endfor %}
-            </ul>
+{% block header %}
+<div class="flex-1 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center space-x-2 text-sm">
+            {% for name, url in breadcrumbs %}
+                {% if not forloop.last %}
+                    <a href="{{ url }}" class="text-gray-500 hover:text-gray-700 transition-colors">{{ name }}</a>
+                    <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                {% else %}
+                    <span class="text-gray-900 font-semibold">{{ name }}</span>
+                {% endif %}
+            {% endfor %}
+        </nav>
+    </div>
+    <div class="flex items-center space-x-3">
+        <div class="relative">
+            <input type="search"
+                   placeholder="Search in this folder..."
+                   class="w-80 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
-        <div>
-            <h2 class="text-xl font-semibold mb-2">Files</h2>
-            <ul>
-                {% for file in files %}
-                <li>
-                    <a href="#" class="text-blue-500 hover:underline">{{ file.name }}</a>
-                    <a href="{% url 'share_file' file.id %}" class="ml-2 text-sm text-gray-500">(Share)</a>
-                </li>
-                {% empty %}
-                <li>No files yet.</li>
-                {% endfor %}
-            </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Quick Actions -->
+    <div class="mb-6 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <button onclick="openCreateFolderModal()"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-folder-plus mr-2"></i>
+                New Folder
+            </button>
+            <button onclick="document.getElementById('file-upload').click()"
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-upload mr-2"></i>
+                Upload File
+            </button>
+        </div>
+        <div class="flex items-center space-x-2 text-sm text-gray-600">
+            <span>{{ folders.count }} folders, {{ files.count }} files</span>
         </div>
     </div>
 
-    <div class="mt-8">
-        <h2 class="text-xl font-semibold mb-2">Create New Folder</h2>
+    <!-- Hidden file upload form -->
+    <form method="post" enctype="multipart/form-data" id="upload-form" class="hidden">
+        {% csrf_token %}
+        <input type="file" name="file" id="file-upload" onchange="document.getElementById('upload-form').submit()">
+        <button type="submit" name="upload_file"></button>
+    </form>
+
+    <!-- Folders Section -->
+    {% if folders %}
+    <div class="mb-8">
+        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+            <i class="fas fa-folder mr-2 text-gray-400"></i>
+            Folders
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for subfolder in folders %}
+            <div class="group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all cursor-pointer relative">
+                <a href="{% url 'folder_detail' subfolder.id %}" class="block">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-folder text-2xl text-blue-500"></i>
+                        </div>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="event.preventDefault(); shareFolder({{ subfolder.id }})"
+                                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="fas fa-share-nodes text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-medium text-gray-900 mb-1 truncate">{{ subfolder.name }}</h3>
+                    <div class="flex items-center text-xs text-gray-500 space-x-3">
+                        <span class="flex items-center">
+                            <i class="fas fa-folder text-xs mr-1"></i>
+                            {{ subfolder.subfolder_count }}
+                        </span>
+                        <span class="flex items-center">
+                            <i class="fas fa-file text-xs mr-1"></i>
+                            {{ subfolder.file_count }}
+                        </span>
+                        <span>{{ subfolder.updated_at|date:"M d" }}</span>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Files Section -->
+    {% if files %}
+    <div>
+        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+            <i class="fas fa-file mr-2 text-gray-400"></i>
+            Files
+        </h2>
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Size
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Modified
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for file in files %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mr-3">
+                                    <i class="fas fa-file-alt text-gray-400"></i>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-medium text-gray-900">{{ file.name }}</div>
+                                    <div class="text-gray-500">{{ file.mime_type|default:"Unknown" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ file.formatted_size }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ file.updated_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{{ file.file.url }}" download
+                               class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button onclick="shareFile({{ file.id }})"
+                                    class="text-gray-600 hover:text-gray-900">
+                                <i class="fas fa-share-nodes"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not folders and not files %}
+    <div class="flex flex-col items-center justify-center py-16">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-folder-open text-4xl text-gray-400"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">This folder is empty</h3>
+        <p class="text-gray-500 mb-6 text-center max-w-md">
+            Start organizing by creating subfolders or uploading files
+        </p>
+        <div class="flex items-center space-x-3">
+            <button onclick="openCreateFolderModal()"
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-folder-plus mr-2"></i>
+                Create Folder
+            </button>
+            <button onclick="document.getElementById('file-upload').click()"
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-upload mr-2"></i>
+                Upload File
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Create Folder Modal -->
+<div id="createFolderModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Create New Folder</h3>
+        </div>
         <form method="post" action="">
             {% csrf_token %}
-            <input type="text" name="folder_name" placeholder="Folder Name" class="border p-2 rounded">
-            <button type="submit" name="create_folder" class="bg-blue-500 text-white p-2 rounded">Create Folder</button>
-        </form>
-    </div>
-
-    <div class="mt-8">
-        <h2 class="text-xl font-semibold mb-2">Upload New File</h2>
-        <form method="post" action="" enctype="multipart/form-data">
-            {% csrf_token %}
-            <input type="file" name="file" class="border p-2 rounded">
-            <button type="submit" name="upload_file" class="bg-blue-500 text-white p-2 rounded">Upload File</button>
+            <div class="px-6 py-4">
+                <label for="folder_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Folder Name
+                </label>
+                <input type="text"
+                       name="folder_name"
+                       id="folder_name"
+                       placeholder="Enter folder name"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       required>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-3">
+                <button type="button"
+                        onclick="closeCreateFolderModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        name="create_folder"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                    Create Folder
+                </button>
+            </div>
         </form>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openCreateFolderModal() {
+    document.getElementById('createFolderModal').classList.remove('hidden');
+    document.getElementById('createFolderModal').classList.add('flex');
+    document.getElementById('folder_name').focus();
+}
+
+function closeCreateFolderModal() {
+    document.getElementById('createFolderModal').classList.add('hidden');
+    document.getElementById('createFolderModal').classList.remove('flex');
+    document.getElementById('folder_name').value = '';
+}
+
+function shareFolder(folderId) {
+    window.location.href = `/share/folder/${folderId}/`;
+}
+
+function shareFile(fileId) {
+    window.location.href = `/share/file/${fileId}/`;
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeCreateFolderModal();
+    }
+});
+
+// Close modal on background click
+document.getElementById('createFolderModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeCreateFolderModal();
+    }
+});
+</script>
 {% endblock %}

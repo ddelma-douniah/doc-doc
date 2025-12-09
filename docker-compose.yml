@@ -1,27 +1,50 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=doc_doc
+      - POSTGRES_USER=doc_doc_user
+      - POSTGRES_PASSWORD=doc_doc_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doc_doc_user -d doc_doc"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   web:
     build: .
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8080 doc_doc.wsgi:application"
+             gunicorn --bind 0.0.0.0:8080 --workers 3 --timeout 120 doc_doc.wsgi:application"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - logs_volume:/app/logs
     expose:
       - "8080"
     environment:
       - DEBUG=True
       - SECRET_KEY=django-insecure-4ljx5pbt9c98%4nww*0c=irj1g#2wz$$%e+pc(g-&=_)t9slwn!
       - ALLOWED_HOSTS=doc-doc.douniah.com,localhost,127.0.0.1
+      - POSTGRES_DB=doc_doc
+      - POSTGRES_USER=doc_doc_user
+      - POSTGRES_PASSWORD=doc_doc_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
       - AWS_ACCESS_KEY_ID=minioadmin
       - AWS_SECRET_ACCESS_KEY=minioadmin
       - AWS_STORAGE_BUCKET_NAME=doc-doc
       - AWS_S3_ENDPOINT_URL=http://minio:9000
     depends_on:
+      db:
+        condition: service_healthy
       minio:
         condition: service_healthy
       createbuckets:
@@ -64,9 +87,11 @@ services:
       "
 
 volumes:
+  postgres_data:
   minio_data:
   static_volume:
   media_volume:
+  logs_volume:
 
 networks:
   proxy:
