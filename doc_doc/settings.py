@@ -263,12 +263,10 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@douniah.com')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'server@douniah.com')
 
-# Django Allauth Configuration
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
+# Django Allauth Configuration (Updated for django-allauth 65.3.0+)
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}  # Allow login with email or username
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Required signup fields
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Can be 'mandatory', 'optional', or 'none'
-ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGOUT_ON_GET = False

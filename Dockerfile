@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     netcat-openbsd \
     curl \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -29,10 +32,10 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs
 RUN chmod +x /app/entrypoint.sh
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Set entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120", "doc_doc.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "--timeout", "120", "doc_doc.wsgi:application"]
