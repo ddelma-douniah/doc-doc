@@ -27,6 +27,7 @@ from django.views.generic import (
 )
 
 from .models import File, Folder, Share
+from .validators import validate_file, sanitize_filename
 
 logger = logging.getLogger(__name__)
 
@@ -157,8 +158,20 @@ class DashboardView(LoginRequiredMixin, ListView):
             return redirect('dashboard')
 
         try:
+            # Validate file
+            from django.core.exceptions import ValidationError
+            try:
+                validate_file(uploaded_file)
+            except ValidationError as ve:
+                messages.error(request, str(ve))
+                logger.warning(f"User {request.user.username} attempted invalid file upload: {ve}")
+                return redirect('dashboard')
+
+            # Sanitize filename
+            safe_name = sanitize_filename(uploaded_file.name)
+
             file_obj = File.objects.create(
-                name=uploaded_file.name,
+                name=safe_name,
                 file=uploaded_file,
                 owner=request.user,
                 folder=None
@@ -329,8 +342,20 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
             return redirect('folder_detail', folder_id=folder.id)
 
         try:
+            # Validate file
+            from django.core.exceptions import ValidationError
+            try:
+                validate_file(uploaded_file)
+            except ValidationError as ve:
+                messages.error(request, str(ve))
+                logger.warning(f"User {request.user.username} attempted invalid file upload: {ve}")
+                return redirect('folder_detail', folder_id=folder.id)
+
+            # Sanitize filename
+            safe_name = sanitize_filename(uploaded_file.name)
+
             file_obj = File.objects.create(
-                name=uploaded_file.name,
+                name=safe_name,
                 file=uploaded_file,
                 owner=request.user,
                 folder=folder
@@ -469,6 +494,30 @@ class SharedView(View):
                 'error': _('This share link has expired.')
             }, status=403)
 
+        # Check password protection
+        if share.password:
+            session_key = f'share_password_verified_{share_id}'
+            if not request.session.get(session_key):
+                # Show password form
+                return render(request, 'share_password.html', {
+                    'share': share,
+                    'share_id': share_id
+                })
+
+        # Check shared_with restrictions (if authenticated)
+        if share.shared_with.exists():
+            if not request.user.is_authenticated:
+                logger.warning(f"Unauthenticated attempt to access restricted share: {share_id}")
+                return render(request, 'share_error.html', {
+                    'error': _('This share requires authentication. Please log in.')
+                }, status=403)
+
+            if request.user not in share.shared_with.all():
+                logger.warning(f"User {request.user.username} attempted to access restricted share: {share_id}")
+                return render(request, 'share_error.html', {
+                    'error': _('You do not have permission to access this share.')
+                }, status=403)
+
         # Increment access count
         share.increment_access_count()
 
@@ -493,3 +542,32 @@ class SharedView(View):
             logger.info(f"Share {share_id} accessed for folder: {share.folder.name}")
 
         return render(request, template, context)
+
+    def post(self, request: HttpRequest, share_id: str) -> HttpResponse:
+        """
+        Handle password verification for protected shares.
+
+        Args:
+            request: The HTTP request object.
+            share_id: UUID of the share.
+
+        Returns:
+            Redirect to GET if password correct, otherwise show error.
+        """
+        share = get_object_or_404(Share, id=share_id)
+        password = request.POST.get('password', '')
+
+        if share.check_password(password):
+            # Store verification in session
+            session_key = f'share_password_verified_{share_id}'
+            request.session[session_key] = True
+            logger.info(f"Successful password verification for share: {share_id}")
+            return redirect('shared_view', share_id=share_id)
+        else:
+            logger.warning(f"Failed password attempt for share: {share_id}")
+            messages.error(request, _('Incorrect password. Please try again.'))
+            return render(request, 'share_password.html', {
+                'share': share,
+                'share_id': share_id,
+                'error': True
+            })

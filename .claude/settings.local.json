@@ -3,7 +3,12 @@
     "allow": [
       "Bash(docker compose:*)",
       "Bash(mkdir:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(xargs:*)",
+      "Bash(find:*)",
+      "Bash(python manage.py:*)",
+      "Bash(python:*)"
     ]
   }
 }

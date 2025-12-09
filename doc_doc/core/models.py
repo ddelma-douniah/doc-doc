@@ -8,9 +8,11 @@ import uuid
 from typing import Optional
 
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 class TimeStampedModel(models.Model):
@@ -345,6 +347,32 @@ class Share(TimeStampedModel):
         """Increment the access count for this share."""
         self.access_count += 1
         self.save(update_fields=['access_count'])
+
+    def set_password(self, raw_password: str) -> None:
+        """
+        Set the password for this share (hashed).
+
+        Args:
+            raw_password: The plaintext password to hash and store.
+        """
+        if raw_password:
+            self.password = make_password(raw_password)
+        else:
+            self.password = None
+
+    def check_password(self, raw_password: str) -> bool:
+        """
+        Check if the provided password matches the stored hash.
+
+        Args:
+            raw_password: The plaintext password to check.
+
+        Returns:
+            bool: True if password matches, False otherwise.
+        """
+        if not self.password:
+            return True
+        return check_password(raw_password, self.password)
 
     def get_shared_object(self):
         """
