@@ -15,20 +15,36 @@ A modern, secure document management system built with Django, inspired by Nextc
 
 ## 🛠 Tech Stack
 
-- **Backend**: Django 6.0 + HTMX
+- **Backend**: Django 6.0 + HTMX + Uvicorn (ASGI)
 - **Database**: PostgreSQL 16
 - **Storage**: MinIO (S3-compatible)
-- **Frontend**: Django Templates + Tailwind CSS (django-tailwind)
+- **Frontend**: Django Templates + Tailwind CSS v4 + PostCSS
+- **Static Files**: WhiteNoise (production-ready)
 - **Authentication**: Django Allauth + OAuth2
-- **Deployment**: Docker + Docker Compose
+- **Deployment**: Docker (Multi-Stage Build) + Docker Compose
 
 ## 📋 Prerequisites
 
+### For Production Deployment
 - Docker & Docker Compose
 - A VPS or server with ports 8080, 9090, 9091 available
 - Domain name configured (e.g., doc-doc.douniah.com)
 
+### For Local Development
+- Python 3.13+
+- Node.js 22+ (for Tailwind CSS compilation)
+- PostgreSQL 16 (or use Docker for database only)
+- Make (optional, for convenience commands)
+
 ## 🚀 Quick Start
+
+Choose your deployment method:
+- **[Production with Docker](#production-deployment)** (Recommended for servers)
+- **[Local Development](#local-development)** (For development)
+
+---
+
+## 🐳 Production Deployment
 
 ### 1. Clone the Repository
 
@@ -126,36 +142,132 @@ Follow the prompts to create your admin account.
 - **MinIO Console**: http://your-server:9091
 - **Admin Panel**: http://doc-doc.douniah.com:8080/admin
 
+---
+
+## 💻 Local Development
+
+For detailed development instructions, see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+### Quick Setup with Makefile
+
+If you have `make` installed, you can use convenient shortcuts:
+
+```bash
+# Install all dependencies (Python + Node.js)
+make install
+
+# Setup database
+make migrate
+
+# Create admin user
+make superuser
+
+# Compile Tailwind CSS
+make css-build
+
+# Start development server (in one terminal)
+make dev
+
+# Watch Tailwind CSS changes (in another terminal)
+make css-dev
+```
+
+### Manual Setup
+
+```bash
+# 1. Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Install Node.js dependencies (for Tailwind CSS)
+cd theme/static_src
+npm install
+cd ../..
+
+# 4. Configure environment
+cp .env.example .env
+# Edit .env with your settings (DEBUG=True for development)
+
+# 5. Run migrations
+python manage.py migrate
+
+# 6. Create superuser
+python manage.py createsuperuser
+
+# 7. Compile Tailwind CSS
+cd theme/static_src
+npm run build  # One-time build
+# OR
+npm run dev    # Watch mode (auto-recompile on changes)
+cd ../..
+
+# 8. Collect static files
+python manage.py collectstatic --noinput
+
+# 9. Run development server
+python manage.py runserver
+```
+
+### Available Make Commands
+
+```bash
+make help              # Show all available commands
+make install           # Install all dependencies
+make dev               # Start Django dev server
+make css-dev           # Start Tailwind watcher
+make css-build         # Build production CSS
+make migrate           # Run migrations
+make superuser         # Create superuser
+make test              # Run tests
+make docker-up         # Start Docker services
+make docker-logs       # View Docker logs
+```
+
+For a complete list, run `make help`.
+
 ## 🔧 Configuration
 
-### Nginx Reverse Proxy
+### Nginx Proxy Manager Configuration
 
-Add this configuration to your Nginx:
+This application uses **WhiteNoise** to serve static files efficiently. No special Nginx configuration is needed for static files.
 
+**In Nginx Proxy Manager:**
+
+**Details Tab:**
+- Domain: `doc-doc.douniah.com`
+- Scheme: `http`
+- Forward Hostname: `web` (or container IP)
+- Forward Port: `8080`
+- ✅ Cache Assets
+- ✅ Block Common Exploits
+- ✅ Websockets Support
+
+**SSL Tab:**
+- ✅ Force SSL
+- ✅ HTTP/2 Support
+- ✅ HSTS Enabled
+
+**Advanced Tab:**
 ```nginx
-server {
-    server_name doc-doc.douniah.com;
+# Proxy headers for Django
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
 
-    client_max_body_size 100M;  # Adjust based on your needs
+# Max upload size (matches Django FILE_UPLOAD_MAX_MEMORY_SIZE)
+client_max_body_size 10M;
 
-    location / {
-        proxy_pass http://web:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts for large file uploads
-        proxy_connect_timeout 300s;
-        proxy_send_timeout 300s;
-        proxy_read_timeout 300s;
-    }
-
-    location /static/ {
-        alias /opt/douniah/doc-doc/staticfiles/;
-    }
-}
+# Timeouts
+proxy_connect_timeout 60s;
+proxy_send_timeout 60s;
+proxy_read_timeout 60s;
 ```
+
+**Note:** No `location /static/` block needed - WhiteNoise handles it!
 
 ### OAuth2 Setup
 

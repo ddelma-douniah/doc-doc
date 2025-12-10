@@ -28,8 +28,11 @@ staticfiles/
 media/
 db.sqlite3
 node_modules/
+theme/static/css/dist/
 .gitignore
 .dockerignore
 Dockerfile
+Dockerfile.old
 docker-compose.yml
-README.md
+*.md
+!README.md
