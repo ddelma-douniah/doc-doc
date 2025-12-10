@@ -8,7 +8,9 @@
       "Bash(xargs:*)",
       "Bash(find:*)",
       "Bash(python manage.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(chmod:*)",
+      "Bash(./check_static.sh:*)"
     ]
   }
 }
