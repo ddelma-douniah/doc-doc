@@ -261,6 +261,11 @@ CSRF_TRUSTED_ORIGINS = [os.environ.get('SITE_URL', 'http://localhost:8080')]
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+# Proxy SSL header - Required for Django behind reverse proxy (Nginx Proxy Manager)
+# Tells Django to trust X-Forwarded-Proto header to detect HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
