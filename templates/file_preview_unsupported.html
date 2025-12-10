@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file.name }} - Preview Not Available - doc-doc{% endblock %}
+{% block page_title %}File Preview{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ file.name }}</h2>
+                <p class="text-sm text-gray-500">{{ file.formatted_size }} • {{ mime_type }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Not Available Message -->
+    <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-file text-4xl text-gray-400"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Preview Not Available</h3>
+        <p class="text-gray-600 mb-8 max-w-md mx-auto">
+            This file type cannot be previewed in the browser. Download the file to view it.
+        </p>
+        <a href="{% url 'file_download' file.id %}"
+           class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            <i class="fas fa-download mr-2"></i>
+            Download File
+        </a>
+    </div>
+
+    <!-- File Information -->
+    <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">File Information</h3>
+        <dl class="grid grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">File Name</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.name }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">File Size</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.formatted_size }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Type</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ mime_type }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Location</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                    {% if file.folder %}
+                        <a href="{% url 'folder_detail' file.folder.id %}" class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-folder mr-1"></i>{{ file.folder.name }}
+                        </a>
+                    {% else %}
+                        <i class="fas fa-home mr-1"></i>Root
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Created</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.created_at|date:"M d, Y H:i" }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Modified</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.updated_at|date:"M d, Y H:i" }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+{% endblock %}

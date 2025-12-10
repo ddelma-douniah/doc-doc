@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Statistics - doc-doc{% endblock %}
+{% block page_title %}Dashboard Statistics{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Files Card -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-gray-600">Total Files</h3>
+                <i class="fas fa-file text-blue-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">{{ file_count }}</p>
+        </div>
+
+        <!-- Folders Card -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-gray-600">Total Folders</h3>
+                <i class="fas fa-folder text-yellow-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">{{ folder_count }}</p>
+        </div>
+
+        <!-- Storage Card -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-gray-600">Storage Used</h3>
+                <i class="fas fa-database text-green-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">{{ total_size_formatted }}</p>
+        </div>
+
+        <!-- Favorites Card -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-gray-600">Favorites</h3>
+                <i class="fas fa-star text-yellow-500"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">{{ favorite_count }}</p>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity (Last 30 Days)</h2>
+
+        {% if recent_files or recent_folders %}
+        <div class="space-y-4">
+            {% for file in recent_files %}
+            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-file-alt text-gray-400"></i>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ file.name }}</p>
+                        <p class="text-xs text-gray-500">Created {{ file.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+                <span class="text-sm text-gray-500">{{ file.formatted_size }}</span>
+            </div>
+            {% endfor %}
+
+            {% for folder in recent_folders %}
+            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-folder text-gray-400"></i>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ folder.name }}</p>
+                        <p class="text-xs text-gray-500">Created {{ folder.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No recent activity</p>
+        {% endif %}
+    </div>
+
+    <!-- File Types Breakdown -->
+    <div class="bg-white rounded-lg border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Storage by File Type</h2>
+        {% if file_types %}
+        <div class="space-y-3">
+            {% for type in file_types %}
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span class="text-gray-600">{{ type.mime_type|default:"Unknown" }}</span>
+                    <span class="text-gray-900">{{ type.count }} file(s)</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No files yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

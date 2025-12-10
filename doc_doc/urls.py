@@ -19,6 +19,9 @@ from django.contrib import admin
 from django.urls import path, include
 from doc_doc.core import views
 from doc_doc.core import views_extended
+from doc_doc.core import views_downloads
+from doc_doc.core import views_bulk
+from doc_doc.core import views_dashboard
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,6 +29,7 @@ urlpatterns = [
 
     # Main views
     path('', views.DashboardView.as_view(), name='dashboard'),
+    path('stats/', views_dashboard.UserDashboardView.as_view(), name='user_dashboard'),
     path('home/', views.HomeView.as_view(), name='home'),
     path('folder/<int:folder_id>/', views.FolderDetailView.as_view(), name='folder_detail'),
 
@@ -36,6 +40,9 @@ urlpatterns = [
     path('search/', views_extended.SearchView.as_view(), name='search'),
 
     # File actions
+    path('file/<int:file_id>/download/', views_downloads.FileDownloadView.as_view(), name='file_download'),
+    path('file/<int:file_id>/preview/', views_downloads.FilePreviewView.as_view(), name='file_preview'),
+    path('file/<int:file_id>/serve/', views_downloads.FileServeView.as_view(), name='file_serve'),
     path('file/<int:file_id>/favorite/', views_extended.ToggleFavoriteFileView.as_view(), name='toggle_favorite_file'),
     path('file/<int:file_id>/trash/', views_extended.MoveToTrashFileView.as_view(), name='move_to_trash_file'),
     path('file/<int:file_id>/restore/', views_extended.RestoreFileView.as_view(), name='restore_file'),
@@ -54,6 +61,10 @@ urlpatterns = [
     path('share/file/<int:file_id>/', views.ShareFileView.as_view(), name='share_file'),
     path('share/folder/<int:folder_id>/', views.ShareFolderView.as_view(), name='share_folder'),
     path('share/<uuid:share_id>/', views.SharedView.as_view(), name='shared_view'),
+
+    # Bulk operations
+    path('bulk/files/', views_bulk.BulkFileActionView.as_view(), name='bulk_file_action'),
+    path('bulk/folders/', views_bulk.BulkFolderActionView.as_view(), name='bulk_folder_action'),
 
     # API endpoints
     path('api/storage-usage/', views_extended.StorageUsageView.as_view(), name='storage_usage'),

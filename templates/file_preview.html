@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file.name }} - Preview - doc-doc{% endblock %}
+{% block page_title %}File Preview{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="javascript:history.back()" class="text-gray-600 hover:text-gray-900">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">{{ file.name }}</h2>
+                <p class="text-sm text-gray-500">
+                    {{ file.formatted_size }} • {{ mime_type }}
+                    {% if file.last_accessed %}
+                        • Last accessed {{ file.last_accessed|date:"M d, Y H:i" }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="{% url 'file_download' file.id %}"
+               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                <i class="fas fa-download mr-2"></i>
+                Download
+            </a>
+            <button onclick="window.print()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors">
+                <i class="fas fa-print mr-2"></i>
+                Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Preview Content -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden" style="min-height: 600px;">
+        {% if is_image %}
+            <!-- Image Preview -->
+            <div class="flex items-center justify-center p-8 bg-gray-50">
+                <img src="{% url 'file_serve' file.id %}"
+                     alt="{{ file.name }}"
+                     class="max-w-full h-auto rounded-lg shadow-lg"
+                     style="max-height: 800px;">
+            </div>
+        {% elif is_pdf %}
+            <!-- PDF Preview -->
+            <iframe src="{% url 'file_serve' file.id %}"
+                    class="w-full border-0"
+                    style="height: 800px;"
+                    title="{{ file.name }}">
+            </iframe>
+        {% endif %}
+    </div>
+
+    <!-- File Information -->
+    <div class="mt-6 bg-white rounded-lg border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">File Information</h3>
+        <dl class="grid grid-cols-2 gap-4">
+            <div>
+                <dt class="text-sm font-medium text-gray-500">File Name</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.name }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">File Size</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.formatted_size }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Type</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ mime_type }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Location</dt>
+                <dd class="mt-1 text-sm text-gray-900">
+                    {% if file.folder %}
+                        <a href="{% url 'folder_detail' file.folder.id %}" class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-folder mr-1"></i>{{ file.folder.name }}
+                        </a>
+                    {% else %}
+                        <i class="fas fa-home mr-1"></i>Root
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Created</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.created_at|date:"M d, Y H:i" }}</dd>
+            </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Modified</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ file.updated_at|date:"M d, Y H:i" }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+{% endblock %}

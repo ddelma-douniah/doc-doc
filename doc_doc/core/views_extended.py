@@ -308,11 +308,18 @@ class SearchView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
         """
-        Search files and folders based on query parameter.
+        Search files and folders with filters.
         """
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
+        file_type = self.request.GET.get('type', '').strip()
+        size_filter = self.request.GET.get('size', '').strip()
+        date_filter = self.request.GET.get('date', '').strip()
+
         context['query'] = query
+        context['file_type'] = file_type
+        context['size_filter'] = size_filter
+        context['date_filter'] = date_filter
 
         if not query:
             context['folders'] = []
@@ -327,15 +334,57 @@ class SearchView(LoginRequiredMixin, ListView):
         ).select_related('owner', 'parent').order_by('-updated_at')[:25]
 
         # Search files (not deleted)
-        context['files'] = File.objects.filter(
+        files = File.objects.filter(
             owner=self.request.user,
             name__icontains=query,
             deleted_at__isnull=True
-        ).select_related('owner', 'folder').order_by('-updated_at')[:25]
+        ).select_related('owner', 'folder')
+
+        # Apply file type filter
+        if file_type:
+            if file_type == 'image':
+                files = files.filter(mime_type__startswith='image/')
+            elif file_type == 'pdf':
+                files = files.filter(mime_type='application/pdf')
+            elif file_type == 'document':
+                files = files.filter(mime_type__in=[
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/vnd.ms-excel',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                ])
+            elif file_type == 'text':
+                files = files.filter(mime_type__startswith='text/')
+
+        # Apply size filter
+        if size_filter:
+            if size_filter == 'small':  # < 1MB
+                files = files.filter(size__lt=1024*1024)
+            elif size_filter == 'medium':  # 1-10MB
+                files = files.filter(size__gte=1024*1024, size__lt=10*1024*1024)
+            elif size_filter == 'large':  # > 10MB
+                files = files.filter(size__gte=10*1024*1024)
+
+        # Apply date filter
+        if date_filter:
+            from datetime import timedelta
+            from django.utils import timezone
+            now = timezone.now()
+            if date_filter == 'today':
+                files = files.filter(created_at__gte=now - timedelta(days=1))
+            elif date_filter == 'week':
+                files = files.filter(created_at__gte=now - timedelta(days=7))
+            elif date_filter == 'month':
+                files = files.filter(created_at__gte=now - timedelta(days=30))
+            elif date_filter == 'year':
+                files = files.filter(created_at__gte=now - timedelta(days=365))
+
+        context['files'] = files.order_by('-updated_at')[:25]
 
         logger.info(
-            f"User {self.request.user.username} searched for '{query}': "
-            f"found {context['folders'].count()} folders, {context['files'].count()} files"
+            f"User {self.request.user.username} searched '{query}' "
+            f"(type={file_type}, size={size_filter}, date={date_filter}): "
+            f"{len(context['folders'])} folders, {len(context['files'])} files"
         )
 
         return context
