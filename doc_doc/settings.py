@@ -74,6 +74,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "doc_doc.core.middleware.ErrorHandlingMiddleware",  # Custom error handling
 ]
 
 ROOT_URLCONF = "doc_doc.urls"
@@ -269,22 +270,36 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
 SECURE_HSTS_PRELOAD = not DEBUG
 
 # Email Configuration
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend'  # Console for development
-)
+# Check if SMTP is properly configured
+_EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+_EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+_SMTP_CONFIGURED = bool(_EMAIL_HOST_USER and _EMAIL_HOST_PASSWORD)
+
+# Use graceful SMTP backend if credentials provided, otherwise console
+if _SMTP_CONFIGURED:
+    EMAIL_BACKEND = os.environ.get(
+        'EMAIL_BACKEND',
+        'doc_doc.core.email_backend.GracefulEmailBackend'  # Graceful fallback
+    )
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_USER = _EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = _EMAIL_HOST_PASSWORD
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@douniah.com')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'server@douniah.com')
+
+# Timeout for SMTP connections (prevents hanging)
+EMAIL_TIMEOUT = 10
 
 # Django Allauth Configuration (Updated for django-allauth 65.3.0+)
 ACCOUNT_LOGIN_METHODS = {'email', 'username'}  # Allow login with email or username
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']  # Required signup fields
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Email verification required for security
+# Email verification: optional if SMTP not configured, mandatory if it is
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory' if _SMTP_CONFIGURED else 'optional'
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGOUT_ON_GET = False
@@ -307,6 +322,17 @@ SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8080')
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+
+# Forbidden file extensions for security
+FORBIDDEN_EXTENSIONS = {
+    'exe', 'bat', 'cmd', 'com', 'pif', 'scr', 'vbs', 'js',  # Executables
+    'sh', 'bash', 'zsh',  # Shell scripts
+    'app', 'deb', 'rpm',  # Package files
+    'msi', 'dll', 'sys',  # Windows system files
+}
+
+# User storage limits (per user)
+USER_STORAGE_LIMIT = 15 * 1024 * 1024 * 1024  # 15 GB
 FILE_UPLOAD_PERMISSIONS = 0o644
 
 # Allowed file types for upload

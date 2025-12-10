@@ -128,6 +128,12 @@ class DashboardView(LoginRequiredMixin, ListView):
             return redirect('dashboard')
 
         try:
+            # Check if folder with same name already exists
+            if Folder.objects.filter(owner=request.user, parent=None, name=folder_name, deleted_at__isnull=True).exists():
+                messages.warning(request, _(f'A folder named "{folder_name}" already exists at the root level.'))
+                logger.warning(f"User {request.user.username} attempted to create duplicate folder: {folder_name}")
+                return redirect('dashboard')
+
             folder = Folder.objects.create(
                 name=folder_name,
                 owner=request.user,
@@ -136,8 +142,12 @@ class DashboardView(LoginRequiredMixin, ListView):
             messages.success(request, _(f'Folder "{folder.name}" created successfully.'))
             logger.info(f"User {request.user.username} created folder: {folder.name}")
         except Exception as e:
+            import traceback
             messages.error(request, _('Failed to create folder. Please try again.'))
-            logger.error(f"Error creating folder for user {request.user.username}: {str(e)}")
+            logger.error(
+                f"Error creating folder for user {request.user.username}: {str(e)}\n"
+                f"Traceback: {traceback.format_exc()}"
+            )
 
         return redirect('dashboard')
 
@@ -160,6 +170,24 @@ class DashboardView(LoginRequiredMixin, ListView):
             return redirect('dashboard')
 
         try:
+            # Check storage limit
+            from django.conf import settings
+            from django.db.models import Sum
+            total_size = File.objects.filter(
+                owner=request.user,
+                deleted_at__isnull=True
+            ).aggregate(total=Sum('size'))['total'] or 0
+
+            storage_limit = getattr(settings, 'USER_STORAGE_LIMIT', 15 * 1024 * 1024 * 1024)
+
+            if total_size + uploaded_file.size > storage_limit:
+                messages.error(
+                    request,
+                    _('Storage limit exceeded. Please delete some files or upgrade your plan.')
+                )
+                logger.warning(f"User {request.user.username} exceeded storage limit")
+                return redirect('dashboard')
+
             # Validate file
             from django.core.exceptions import ValidationError
             try:
@@ -311,6 +339,12 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
             return redirect('folder_detail', folder_id=parent.id)
 
         try:
+            # Check if subfolder with same name already exists
+            if Folder.objects.filter(owner=request.user, parent=parent, name=folder_name, deleted_at__isnull=True).exists():
+                messages.warning(request, _(f'A subfolder named "{folder_name}" already exists here.'))
+                logger.warning(f"User {request.user.username} attempted to create duplicate subfolder: {folder_name}")
+                return redirect('folder_detail', folder_id=parent.id)
+
             folder = Folder.objects.create(
                 name=folder_name,
                 owner=request.user,
@@ -322,9 +356,11 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
                 f"in folder: {parent.name}"
             )
         except Exception as e:
+            import traceback
             messages.error(request, _('Failed to create subfolder. Please try again.'))
             logger.error(
-                f"Error creating subfolder for user {request.user.username}: {str(e)}"
+                f"Error creating subfolder for user {request.user.username}: {str(e)}\n"
+                f"Traceback: {traceback.format_exc()}"
             )
 
         return redirect('folder_detail', folder_id=parent.id)
@@ -350,6 +386,24 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
             return redirect('folder_detail', folder_id=folder.id)
 
         try:
+            # Check storage limit
+            from django.conf import settings
+            from django.db.models import Sum
+            total_size = File.objects.filter(
+                owner=request.user,
+                deleted_at__isnull=True
+            ).aggregate(total=Sum('size'))['total'] or 0
+
+            storage_limit = getattr(settings, 'USER_STORAGE_LIMIT', 15 * 1024 * 1024 * 1024)
+
+            if total_size + uploaded_file.size > storage_limit:
+                messages.error(
+                    request,
+                    _('Storage limit exceeded. Please delete some files or upgrade your plan.')
+                )
+                logger.warning(f"User {request.user.username} exceeded storage limit")
+                return redirect('folder_detail', folder_id=folder.id)
+
             # Validate file
             from django.core.exceptions import ValidationError
             try:

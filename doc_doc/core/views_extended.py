@@ -367,8 +367,9 @@ class StorageUsageView(LoginRequiredMixin, View):
             deleted_at__isnull=True
         ).count()
 
-        # Storage limit (15 GB by default, can be customized per user)
-        storage_limit = 15 * 1024 * 1024 * 1024  # 15 GB in bytes
+        # Storage limit from settings
+        from django.conf import settings
+        storage_limit = getattr(settings, 'USER_STORAGE_LIMIT', 15 * 1024 * 1024 * 1024)
 
         # Calculate percentage
         percentage = (total_size / storage_limit * 100) if storage_limit > 0 else 0
