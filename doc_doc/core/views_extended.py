@@ -381,7 +381,10 @@ class StorageUsageView(LoginRequiredMixin, View):
                 bytes_val /= 1024.0
             return f"{bytes_val:.1f} PB"
 
-        return JsonResponse({
+        import json
+        from django.http import HttpResponse
+
+        data = {
             'total_size': total_size,
             'total_size_formatted': format_bytes(total_size),
             'storage_limit': storage_limit,
@@ -389,4 +392,10 @@ class StorageUsageView(LoginRequiredMixin, View):
             'percentage': round(percentage, 2),
             'file_count': file_count,
             'folder_count': folder_count,
-        })
+        }
+
+        # Return non-streaming JSON response to avoid ASGI warning
+        return HttpResponse(
+            json.dumps(data),
+            content_type='application/json'
+        )

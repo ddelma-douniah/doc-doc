@@ -58,3 +58,7 @@ urlpatterns = [
     # API endpoints
     path('api/storage-usage/', views_extended.StorageUsageView.as_view(), name='storage_usage'),
 ]
+
+# Error handlers
+handler404 = 'doc_doc.core.views.handler404'
+handler500 = 'doc_doc.core.views.handler500'

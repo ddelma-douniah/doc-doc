@@ -187,8 +187,12 @@ class DashboardView(LoginRequiredMixin, ListView):
                 f"({file_obj.size} bytes)"
             )
         except Exception as e:
+            import traceback
             messages.error(request, _('Failed to upload file. Please try again.'))
-            logger.error(f"Error uploading file for user {request.user.username}: {str(e)}")
+            logger.error(
+                f"Error uploading file for user {request.user.username}: {str(e)}\n"
+                f"Traceback: {traceback.format_exc()}"
+            )
 
         return redirect('dashboard')
 
@@ -373,9 +377,11 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
                 f"to folder: {folder.name}"
             )
         except Exception as e:
+            import traceback
             messages.error(request, _('Failed to upload file. Please try again.'))
             logger.error(
-                f"Error uploading file to folder for user {request.user.username}: {str(e)}"
+                f"Error uploading file to folder for user {request.user.username}: {str(e)}\n"
+                f"Traceback: {traceback.format_exc()}"
             )
 
         return redirect('folder_detail', folder_id=folder.id)
@@ -575,3 +581,14 @@ class SharedView(View):
                 'share_id': share_id,
                 'error': True
             })
+
+
+# Error handlers
+def handler404(request, exception):
+    """Custom 404 error handler."""
+    return render(request, '404.html', status=404)
+
+
+def handler500(request):
+    """Custom 500 error handler."""
+    return render(request, '500.html', status=500)
