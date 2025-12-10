@@ -75,19 +75,21 @@ class DashboardView(LoginRequiredMixin, ListView):
         """
         context = super().get_context_data(**kwargs)
 
-        # Get root folders (no parent)
+        # Get root folders (no parent, not deleted)
         context['folders'] = Folder.objects.filter(
             owner=self.request.user,
-            parent__isnull=True
+            parent__isnull=True,
+            deleted_at__isnull=True
         ).select_related('owner').annotate(
             file_count=Count('files'),
             subfolder_count=Count('subfolders')
         )
 
-        # Get root files (no folder)
+        # Get root files (no folder, not deleted)
         context['files'] = File.objects.filter(
             owner=self.request.user,
-            folder__isnull=True
+            folder__isnull=True,
+            deleted_at__isnull=True
         ).select_related('owner')
 
         logger.info(
@@ -223,19 +225,21 @@ class FolderDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         folder = self.object
 
-        # Get subfolders
+        # Get subfolders (not deleted)
         context['folders'] = Folder.objects.filter(
             owner=self.request.user,
-            parent=folder
+            parent=folder,
+            deleted_at__isnull=True
         ).annotate(
             file_count=Count('files'),
             subfolder_count=Count('subfolders')
         )
 
-        # Get files in this folder
+        # Get files in this folder (not deleted)
         context['files'] = File.objects.filter(
             owner=self.request.user,
-            folder=folder
+            folder=folder,
+            deleted_at__isnull=True
         )
 
         # Add breadcrumb trail

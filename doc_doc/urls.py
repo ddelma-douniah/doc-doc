@@ -18,14 +18,43 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from doc_doc.core import views
+from doc_doc.core import views_extended
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('allauth.urls')),
+
+    # Main views
     path('', views.DashboardView.as_view(), name='dashboard'),
     path('home/', views.HomeView.as_view(), name='home'),
     path('folder/<int:folder_id>/', views.FolderDetailView.as_view(), name='folder_detail'),
+
+    # Extended views - Favorites, Recent, Trash
+    path('favorites/', views_extended.FavoritesView.as_view(), name='favorites'),
+    path('recent/', views_extended.RecentFilesView.as_view(), name='recent'),
+    path('trash/', views_extended.TrashView.as_view(), name='trash'),
+    path('search/', views_extended.SearchView.as_view(), name='search'),
+
+    # File actions
+    path('file/<int:file_id>/favorite/', views_extended.ToggleFavoriteFileView.as_view(), name='toggle_favorite_file'),
+    path('file/<int:file_id>/trash/', views_extended.MoveToTrashFileView.as_view(), name='move_to_trash_file'),
+    path('file/<int:file_id>/restore/', views_extended.RestoreFileView.as_view(), name='restore_file'),
+    path('file/<int:file_id>/delete/', views_extended.PermanentDeleteFileView.as_view(), name='permanent_delete_file'),
+
+    # Folder actions
+    path('folder/<int:folder_id>/favorite/', views_extended.ToggleFavoriteFolderView.as_view(), name='toggle_favorite_folder'),
+    path('folder/<int:folder_id>/trash/', views_extended.MoveToTrashFolderView.as_view(), name='move_to_trash_folder'),
+    path('folder/<int:folder_id>/restore/', views_extended.RestoreFolderView.as_view(), name='restore_folder'),
+    path('folder/<int:folder_id>/delete/', views_extended.PermanentDeleteFolderView.as_view(), name='permanent_delete_folder'),
+
+    # Trash actions
+    path('trash/empty/', views_extended.EmptyTrashView.as_view(), name='empty_trash'),
+
+    # Sharing
     path('share/file/<int:file_id>/', views.ShareFileView.as_view(), name='share_file'),
     path('share/folder/<int:folder_id>/', views.ShareFolderView.as_view(), name='share_folder'),
     path('share/<uuid:share_id>/', views.SharedView.as_view(), name='shared_view'),
+
+    # API endpoints
+    path('api/storage-usage/', views_extended.StorageUsageView.as_view(), name='storage_usage'),
 ]

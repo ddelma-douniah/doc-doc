@@ -61,6 +61,17 @@ class Folder(TimeStampedModel):
         db_index=True,
         help_text=_("Owner of the folder")
     )
+    is_favorite = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=_("Whether this folder is marked as favorite")
+    )
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Timestamp when the folder was moved to trash")
+    )
 
     class Meta:
         verbose_name = _("Folder")
@@ -129,10 +140,35 @@ class Folder(TimeStampedModel):
         Returns:
             int: Total size in bytes.
         """
-        size = sum(f.file.size for f in self.files.all() if f.file)
-        for subfolder in self.subfolders.all():
+        size = sum(f.file.size for f in self.files.filter(deleted_at__isnull=True) if f.file)
+        for subfolder in self.subfolders.filter(deleted_at__isnull=True):
             size += subfolder.get_size()
         return size
+
+    def move_to_trash(self) -> None:
+        """Move this folder and all its contents to trash (soft delete)."""
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['deleted_at'])
+        # Also trash all subfolders and files
+        for subfolder in self.subfolders.all():
+            subfolder.move_to_trash()
+        for file in self.files.all():
+            file.move_to_trash()
+
+    def restore_from_trash(self) -> None:
+        """Restore this folder and all its contents from trash."""
+        self.deleted_at = None
+        self.save(update_fields=['deleted_at'])
+        # Also restore all subfolders and files
+        for subfolder in self.subfolders.all():
+            subfolder.restore_from_trash()
+        for file in self.files.all():
+            file.restore_from_trash()
+
+    def toggle_favorite(self) -> None:
+        """Toggle favorite status."""
+        self.is_favorite = not self.is_favorite
+        self.save(update_fields=['is_favorite'])
 
 
 class File(TimeStampedModel):
@@ -176,6 +212,23 @@ class File(TimeStampedModel):
         max_length=100,
         blank=True,
         help_text=_("MIME type of the file")
+    )
+    is_favorite = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text=_("Whether this file is marked as favorite")
+    )
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Timestamp when the file was moved to trash")
+    )
+    last_accessed = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("Last time the file was accessed/viewed")
     )
 
     class Meta:
@@ -238,6 +291,26 @@ class File(TimeStampedModel):
                 return f"{size:.1f} {unit}"
             size /= 1024.0
         return f"{size:.1f} PB"
+
+    def move_to_trash(self) -> None:
+        """Move this file to trash (soft delete)."""
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['deleted_at'])
+
+    def restore_from_trash(self) -> None:
+        """Restore this file from trash."""
+        self.deleted_at = None
+        self.save(update_fields=['deleted_at'])
+
+    def toggle_favorite(self) -> None:
+        """Toggle favorite status."""
+        self.is_favorite = not self.is_favorite
+        self.save(update_fields=['is_favorite'])
+
+    def mark_accessed(self) -> None:
+        """Update last_accessed timestamp."""
+        self.last_accessed = timezone.now()
+        self.save(update_fields=['last_accessed'])
 
 
 class Share(TimeStampedModel):

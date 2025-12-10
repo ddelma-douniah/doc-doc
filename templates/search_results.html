@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - doc-doc{% endblock %}
+{% block page_title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Search Header -->
+    <div class="mb-6">
+        {% if query %}
+        <p class="text-sm text-gray-600">
+            Results for: <span class="font-semibold text-gray-900">"{{ query }}"</span>
+            {% if folders or files %}
+                ({{ folders.count|add:files.count }} items found)
+            {% endif %}
+        </p>
+        {% else %}
+        <p class="text-sm text-gray-600">Enter a search query to find files and folders</p>
+        {% endif %}
+    </div>
+
+    {% if query %}
+        <!-- Folders Results -->
+        {% if folders %}
+        <div class="mb-8">
+            <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+                <i class="fas fa-folder mr-2 text-gray-400"></i>
+                Folders ({{ folders.count }})
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {% for folder in folders %}
+                <div class="group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all">
+                    <a href="{% url 'folder_detail' folder.id %}" class="block">
+                        <div class="flex items-start mb-3">
+                            <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-folder text-2xl text-blue-500"></i>
+                            </div>
+                        </div>
+                        <h3 class="font-medium text-gray-900 mb-1 truncate">{{ folder.name }}</h3>
+                        <p class="text-xs text-gray-500">
+                            {% if folder.parent %}
+                                <i class="fas fa-folder text-xs mr-1"></i>{{ folder.parent.name }}
+                            {% else %}
+                                <i class="fas fa-home text-xs mr-1"></i>Root
+                            {% endif %}
+                        </p>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Files Results -->
+        {% if files %}
+        <div>
+            <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+                <i class="fas fa-file mr-2 text-gray-400"></i>
+                Files ({{ files.count }})
+            </h2>
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modified</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for file in files %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                                    <span class="text-sm font-medium text-gray-900">{{ file.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {% if file.folder %}
+                                    <a href="{% url 'folder_detail' file.folder.id %}" class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-folder text-xs mr-1"></i>{{ file.folder.name }}
+                                    </a>
+                                {% else %}
+                                    <i class="fas fa-home text-xs mr-1"></i>Root
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ file.formatted_size }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">{{ file.updated_at|date:"M d, Y" }}</td>
+                            <td class="px-6 py-4 text-right text-sm">
+                                <a href="{{ file.file.url }}" download class="text-blue-600 hover:text-blue-900">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- No Results -->
+        {% if not folders and not files %}
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-search text-4xl text-gray-400"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No results found</h3>
+            <p class="text-gray-500 mb-6 text-center max-w-md">
+                Try different keywords or check your spelling
+            </p>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty search -->
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-search text-4xl text-blue-600"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Search your files</h3>
+            <p class="text-gray-500 mb-6 text-center max-w-md">
+                Use the search bar above to find files and folders
+            </p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

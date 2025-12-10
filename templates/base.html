@@ -36,23 +36,24 @@
                     <i class="fas fa-home w-5 mr-3"></i>
                     Home
                 </a>
-                <a href="#"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                <a href="{% url 'favorites' %}"
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors {% if request.path == '/favorites/' %}bg-gray-100 text-gray-900{% else %}text-gray-700{% endif %}">
                     <i class="fas fa-star w-5 mr-3"></i>
                     Favorites
                 </a>
                 <a href="#"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-400 rounded-lg cursor-not-allowed"
+                   title="Coming soon">
                     <i class="fas fa-share-nodes w-5 mr-3"></i>
                     Shared with me
                 </a>
-                <a href="#"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                <a href="{% url 'recent' %}"
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors {% if request.path == '/recent/' %}bg-gray-100 text-gray-900{% else %}text-gray-700{% endif %}">
                     <i class="fas fa-clock w-5 mr-3"></i>
                     Recent
                 </a>
-                <a href="#"
-                   class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                <a href="{% url 'trash' %}"
+                   class="flex items-center px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors {% if request.path == '/trash/' %}bg-gray-100 text-gray-900{% else %}text-gray-700{% endif %}">
                     <i class="fas fa-trash w-5 mr-3"></i>
                     Trash
                 </a>
@@ -63,10 +64,10 @@
                 <div class="bg-gray-50 rounded-lg p-3">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-medium text-gray-600">Storage</span>
-                        <span class="text-xs text-gray-500">2.4 GB of 15 GB</span>
+                        <span class="text-xs text-gray-500" id="storage-text">Loading...</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-1.5">
-                        <div class="bg-blue-600 h-1.5 rounded-full" style="width: 16%"></div>
+                        <div class="bg-blue-600 h-1.5 rounded-full transition-all" id="storage-bar" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -100,13 +101,16 @@
                         <h1 class="text-xl font-semibold text-gray-900">{% block page_title %}Dashboard{% endblock %}</h1>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <div class="relative">
+                        <form action="{% url 'search' %}" method="get" class="relative">
                             <input type="search"
+                                   name="q"
                                    placeholder="Search files and folders..."
-                                   class="w-80 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   class="w-80 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   value="{{ query|default:'' }}">
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        </div>
-                        <button class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                        </form>
+                        <button class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                                title="Notifications (coming soon)">
                             <i class="fas fa-bell"></i>
                         </button>
                     </div>
@@ -137,5 +141,39 @@
 
     {% block extra_js %}
     {% endblock %}
+
+    <!-- Storage Usage Script -->
+    {% if user.is_authenticated %}
+    <script>
+    // Fetch storage usage data
+    fetch('{% url "storage_usage" %}')
+        .then(response => response.json())
+        .then(data => {
+            const storageText = document.getElementById('storage-text');
+            const storageBar = document.getElementById('storage-bar');
+
+            if (storageText && storageBar) {
+                storageText.textContent = `${data.total_size_formatted} of ${data.storage_limit_formatted}`;
+                storageBar.style.width = `${data.percentage}%`;
+
+                // Change color based on usage
+                if (data.percentage > 90) {
+                    storageBar.classList.remove('bg-blue-600');
+                    storageBar.classList.add('bg-red-600');
+                } else if (data.percentage > 75) {
+                    storageBar.classList.remove('bg-blue-600');
+                    storageBar.classList.add('bg-yellow-600');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching storage usage:', error);
+            const storageText = document.getElementById('storage-text');
+            if (storageText) {
+                storageText.textContent = 'Error loading';
+            }
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "doc_doc.core.apps.CoreConfig",
-    "tailwind",
     "theme",
     'django_htmx',
     'allauth',
@@ -59,8 +58,6 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'storages',
 ]
-
-TAILWIND_APP_NAME = 'theme'
 
 INTERNAL_IPS = [
     "127.0.0.1",

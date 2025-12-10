@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Trash - doc-doc{% endblock %}
+{% block page_title %}Trash{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header with actions -->
+    <div class="mb-6 flex items-center justify-between">
+        <p class="text-sm text-gray-600">Items in trash will be automatically deleted after 30 days</p>
+        {% if folders or files %}
+        <form method="post" action="{% url 'empty_trash' %}" onsubmit="return confirm('Permanently delete all items in trash? This cannot be undone!');">
+            {% csrf_token %}
+            <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-trash-alt mr-2"></i>
+                Empty Trash
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Folders Section -->
+    {% if folders %}
+    <div class="mb-8">
+        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+            <i class="fas fa-folder mr-2 text-gray-400"></i>
+            Folders ({{ folders.count }})
+        </h2>
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deleted</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for folder in folders %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-folder text-gray-400 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ folder.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ folder.deleted_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-6 py-4 text-right text-sm">
+                            <form method="post" action="{% url 'restore_folder' folder.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class="fas fa-undo"></i> Restore
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'permanent_delete_folder' folder.id %}" class="inline" onsubmit="return confirm('Permanently delete this folder? This cannot be undone!');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash-alt"></i> Delete Forever
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Files Section -->
+    {% if files %}
+    <div>
+        <h2 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4 flex items-center">
+            <i class="fas fa-file mr-2 text-gray-400"></i>
+            Files ({{ files.count }})
+        </h2>
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deleted</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for file in files %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                                <span class="text-sm font-medium text-gray-900">{{ file.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ file.formatted_size }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ file.deleted_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-6 py-4 text-right text-sm">
+                            <form method="post" action="{% url 'restore_file' file.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class="fas fa-undo"></i> Restore
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'permanent_delete_file' file.id %}" class="inline" onsubmit="return confirm('Permanently delete this file? This cannot be undone!');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash-alt"></i> Delete Forever
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not folders and not files %}
+    <div class="flex flex-col items-center justify-center py-16">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-trash text-4xl text-gray-400"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">Trash is empty</h3>
+        <p class="text-gray-500 mb-6 text-center max-w-md">
+            Deleted items will appear here before being permanently removed
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

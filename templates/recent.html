@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Recent - doc-doc{% endblock %}
+{% block page_title %}Recent Files{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <p class="text-sm text-gray-600">Recently accessed or modified files</p>
+    </div>
+
+    <!-- Files Section -->
+    {% if files %}
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Accessed</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for file in files %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mr-3">
+                                <i class="fas fa-file-alt text-gray-400"></i>
+                            </div>
+                            <div class="text-sm">
+                                <div class="font-medium text-gray-900">{{ file.name }}</div>
+                                <div class="text-gray-500">
+                                    {% if file.folder %}
+                                        <i class="fas fa-folder text-xs mr-1"></i>{{ file.folder.name }}
+                                    {% else %}
+                                        <i class="fas fa-home text-xs mr-1"></i>Root
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ file.formatted_size }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {% if file.last_accessed %}
+                            {{ file.last_accessed|date:"M d, Y H:i" }}
+                        {% else %}
+                            {{ file.updated_at|date:"M d, Y H:i" }}
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{{ file.file.url }}" download class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-16">
+        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-clock text-4xl text-gray-400"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No recent files</h3>
+        <p class="text-gray-500 mb-6 text-center max-w-md">
+            Files you access will appear here
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
